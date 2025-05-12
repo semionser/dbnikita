@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Аналитика склада</title>
+    <link rel="icon" href="{{ url_for('static', filename='kit.ico') }}" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f4f9;
+            font-family: Arial, sans-serif;
+            animation: fadeInBody 1s ease;
+        }
+
+        @keyframes fadeInBody {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        h1 {
+            animation: slideDown 1s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            border-radius: 10px;
+            animation: fadeUp 0.8s ease both;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-title {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .divider {
+            border-top: 1px solid #ccc;
+            margin: 25px 0;
+        }
+
+        .telegram-icon, .excel-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            vertical-align: text-bottom;
+        }
+
+        .btn-telegram {
+            background-color: #229ED9;
+            color: white;
+        }
+
+        .btn-telegram:hover {
+            background-color: #1b8fcf;
+        }
+
+        .btn-excel {
+            background-color: #217346;
+            color: white;
+        }
+
+        .btn-excel:hover {
+            background-color: #1a5e39;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            height: 50px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            transition: transform 0.4s ease;
+            pointer-events: none;
+        }
+
+        .btn:active::after {
+            transform: translate(-50%, -50%) scale(1);
+            transition: transform 0s;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        @media (min-width: 576px) {
+            .action-buttons {
+                flex-direction: row;
+            }
+
+            .action-buttons .btn,
+            .action-buttons form {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container py-4">
+    <h1 class="mb-4 text-center">Аналитика склада</h1>
+
+    <div class="card p-4 shadow-sm">
+        <p class="info-title">Общее количество товара (в штуках):</p>
+        <p class="info-value">{{ total_goods_quantity }}</p>
+
+        <div class="divider"></div><p class="info-title">Добавлено товаров (по позициям):</p>
+        <p class="info-value">{{ added_goods_count }}</p>
+
+        <div class="divider"></div>
+
+        <p class="info-title">Добавлено канцелярии (по позициям):</p>
+        <p class="info-value">{{ added_stationery_count }}</p>
+    </div>
+
+    <div class="card mt-4 p-4 shadow-sm">
+        <div class="section-title">Действия:</div>
+        <div class="action-buttons">
+            <a href="{{ url_for('download_excel') }}" class="btn btn-excel">
+                <img src="https://cdn-icons-png.flaticon.com/512/732/732220.png" alt="Excel" class="excel-icon">
+                Выгрузить в Excel
+            </a>
+            <form method="post" action="{{ url_for('notify_stock') }}">
+                <button type="submit" class="btn btn-telegram w-100">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" alt="Telegram" class="telegram-icon">
+                    Оповестить об остатках
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary w-100">Выход на склад</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

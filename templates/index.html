@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Склад товаров</title>
+    <link rel="icon" href="{{ url_for('static', filename='kit.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        .top-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .top-buttons .btn {
+            margin: 5px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add {
+            background-color: #5C6BC0;
+            color: white;
+            border: none;
+        }
+
+        .btn-add:hover {
+            background-color: #4F5B8B;
+        }
+
+        .btn-analytics {
+            background-color: #8E8E8E;
+            color: white;
+            border: none;
+        }
+
+        .btn-analytics:hover {
+            background-color: #7E7E7E;
+        }
+
+        .btn-logout {
+            background-color: #E57373;
+            color: white;
+            border: none;
+        }
+
+        .btn-logout:hover {
+            background-color: #EF5350;
+        }
+
+        .divider {
+            border-top: 1px solid #ccc;
+            margin: 30px 0 10px;
+        }
+
+        .category-title {
+            color: #666;
+            font-weight: bold;
+            font-size: 1.3rem;
+            margin: 20px 0 10px;
+        }
+
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: white;
+            height: 100%;
+        }
+
+        .product-image {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .product-quantity {
+            color: #000;
+            font-weight: bold;
+        }
+
+        .product-ozon {
+            color: #444;
+            font-weight: normal;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .search-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-container input {
+            width: 300px;
+            padding: 10px;
+            border-radius: 25px;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin-top: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-container button:hover {
+            background-color: #45a049;
+        }
+
+        .search-container .btn-secondary {
+            background-color: #E57373;
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-container .btn-secondary:hover {
+            background-color: #EF5350;
+        }
+
+        .top-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .col-md-4 {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .col-md-4 {flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-3">Товары на складе</h1>
+
+        <div class="text-center top-buttons">
+            <a href="{{ url_for('add_product') }}" class="btn btn-add">
+                <i class="fas fa-plus-circle"></i> Добавить товар
+            </a>
+            <a href="{{ url_for('analytics') }}" class="btn btn-analytics">
+                <i class="fas fa-chart-line"></i> Аналитика
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Выйти
+            </a>
+        </div>
+         <div class="search-container">
+            <form action="/" method="get">
+                <input type="text" name="search" id="searchInput" class="form-control" placeholder="Поиск по названию или количеству..." value="{{ request.args.get('search', '') }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Поиск
+                </button>
+                {% if request.args.get('search') %}
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times-circle"></i> Отмена
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% for category, label in [('товар', 'Товары'), ('канцелярия', 'Канцелярия')] %}
+            <div class="divider"></div>
+            <div class="category-title">{{ label }}</div>
+            <div class="row d-flex flex-wrap">
+                {% for product in products %}
+                    {% if product.category == category %}
+                        <div class="col-md-4 col-sm-6 col-xs-12 d-flex">
+                            <div class="product-card w-100"><img src="{{ url_for('static', filename='uploads/' + product.image) }}" class="product-image" alt="{{ product.name }}">
+                                <h4 class="product-name">{{ product.name }}</h4>
+                                <p class="product-quantity">Количество: {{ product.quantity }}</p>
+                                <p class="product-ozon">Количество на Ozone: ???</p>
+
+                                <form action="{{ url_for('update_quantity', product_id=product.id) }}" method="POST">
+                                    <div class="form-group">
+                                        <label for="quantity">Новое количество:</label>
+                                        <input type="number" name="quantity" class="form-control" value="{{ product.quantity }}" min="0" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Обновить количество</button>
+                                </form>
+
+                                <form action="{{ url_for('delete_product', product_id=product.id) }}" method="POST">
+                                    <button type="submit" class="btn btn-danger">Удалить товар</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
