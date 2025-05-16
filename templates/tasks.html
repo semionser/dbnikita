@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Задачи</title>
+    <link rel="icon" href="{{ url_for('static', filename='kit.ico') }}" type="image/x-icon" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #f4f4f9;
+            font-family: Arial, sans-serif;
+            animation: fadeInBody 1s ease;
+        }
+        @keyframes fadeInBody {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        h1 {
+            animation: slideDown 1s ease-out;
+            color: #333;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card {
+            border-radius: 10px;
+            animation: fadeUp 0.8s ease both;
+            transition: box-shadow 0.3s ease;
+            background: white;
+        }
+        .card:hover {
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .overdue {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+        }
+        .almost-overdue {
+            background-color: #fff3cd !important;
+            color: #856404 !important;
+        }
+        .info-title {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            height: 45px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .btn-exit {
+            background-color: #6c757d;
+            color: white;
+            width: 100%;
+            margin-top: 30px;
+        }
+        .btn-exit:hover {
+            background-color: #5a6268;
+            color: white;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        .deadline-cell {
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        .deadline-cell.overdue {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .deadline-cell.almost-overdue {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .btn-danger {
+            font-weight: 600;
+            padding: 6px 14px;
+            height: auto;
+        }
+        .send-btn svg {
+            margin-right: 6px;
+        }
+        .info-next-send {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 1rem;
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-4">
+    <h1 class="mb-4 text-center">Задачи</h1>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert alert-info">
+          {% for message in messages %}
+            <div>{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="card p-4 mb-4 shadow-sm">
+        <form method="post" action="{{ url_for('tasks') }}">
+            <div class="mb-3">
+                <label for="name" class="form-label info-title">Имя</label>
+                <select class="form-select" id="name" name="name" required><option value="" disabled selected>Выберите имя</option>
+                    {% for n in names %}
+                        <option value="{{ n }}">{{ n }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label info-title">Задание</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="deadline" class="form-label info-title">Срок (до даты)</label>
+                <input class="form-control" type="date" id="deadline" name="deadline" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Добавить задачу</button>
+        </form>
+    </div>
+
+    <div class="card p-4 shadow-sm">
+        <h2 class="mb-3">Список задач</h2>
+        <form method="post" action="{{ url_for('notify_tasks') }}" class="mb-3">
+            <button type="submit" class="btn btn-outline-primary w-100 send-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-send" viewBox="0 0 16 16">
+                    <path d="M15.854.146a.5.5 0 0 1 .11.538l-5 14a.5.5 0 0 1-.948.032L8.21 10.21 1.28 8.09a.5.5 0 0 1-.09-.888l14-7a.5.5 0 0 1 .664.144z"/>
+                </svg>
+                Отправить задачи в Telegram
+            </button>
+        </form>
+
+        {% if tasks %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Имя</th>
+                        <th>Задание</th>
+                        <th>Срок</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for task in tasks %}
+                    {% set days_left = (task.deadline - today).days %}
+                    {% set is_due_today = days_left == 0 %}
+                    {% set is_due_tomorrow = days_left == 1 %}
+                    {% set is_overdue = days_left < 0 %}
+                    <tr class="{% if is_overdue or is_due_today %}overdue{% elif is_due_tomorrow %}almost-overdue{% endif %}">
+                        <td>{{ task.name }}</td>
+                        <td>{{ task.description }}</td>
+                        <td>{{ task.deadline.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if is_overdue %}
+                                Просрочено на {{ days_left | abs }} дн.
+                            {% elif is_due_today %}
+                                Сегодня
+                            {% elif is_due_tomorrow %}
+                                Завтра
+                            {% else %}
+                                {{ days_left }} дн.
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="{{ url_for('delete_task', task_id=task.id) }}" onsubmit="return confirm('Удалить задачу?');" class="m-0">
+                                <button type="submit" class="btn btn-sm btn-secondary">Удалить</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="text-center">Задач пока нет.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p>Задачи отсутствуют.</p>
+        {% endif %}
+
+        <div class="info-next-send">
+            Следующая автоматическая отправка задач в Telegram через примерно {{ hours_until_send }} часов.
+        </div>
+    </div>
+
+    <form method="get" action="{{ url_for('index') }}">
+        <button type="submit" class="btn btn-exit">Выйти на главную</button>
+    </form>
+
+</div>
+</body>
+</html>
