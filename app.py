@@ -155,7 +155,7 @@ def logout():
 
 
 #==  Таски ===
-NAMES = ['Вася', 'Сема', 'Рома']
+NAMES = ['Никита', 'Рабы']
 
 @app.route('/tasks', methods=['GET', 'POST'])
 @login_required
