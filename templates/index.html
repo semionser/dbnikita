@@ -11,53 +11,68 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
+            color: #000;
         }
 
         .container {
             margin-top: 20px;
         }
 
-        .top-buttons {
-            margin-top: 20px;
-            text-align: center;
+        .main-menu {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 10px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+            margin-bottom: 25px;
         }
 
-        .top-buttons .btn {
-            margin: 5px;
-            padding: 10px 20px;
-            border-radius: 25px;
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #444;
             font-weight: 600;
             transition: all 0.3s ease;
+            border-radius: 10px;
         }
 
-        .btn-add {
-            background-color: #5C6BC0;
-            color: white;
-            border: none;
+        .menu-item i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: #5C6BC0;
+            transition: color 0.3s ease;
         }
 
-        .btn-add:hover {
-            background-color: #4F5B8B;
+        .menu-item span {
+            font-size: 0.9rem;
         }
 
-        .btn-analytics {
-            background-color: #8E8E8E;
-            color: white;
-            border: none;
+        .menu-item:hover {
+            background-color: #f0f0f8;
+            transform: translateY(-2px);
         }
 
-        .btn-analytics:hover {
-            background-color: #7E7E7E;
+        .menu-item:hover i {
+            color: #3949ab;
         }
 
-        .btn-logout {
+        .menu-item.logout {
             background-color: #E57373;
             color: white;
-            border: none;
         }
 
-        .btn-logout:hover {
-            background-color: #EF5350;
+        .menu-item.logout i {
+            color: white;
+        }
+
+        .menu-item.logout:hover {
+            background-color: #D32F2F;
         }
 
         .divider {
@@ -139,10 +154,6 @@
             transition: all 0.3s ease;
         }
 
-        .search-container button:hover {
-            background-color: #45a049;
-        }
-
         .search-container .btn-secondary {
             background-color: #E57373;
             color: white;
@@ -150,13 +161,91 @@
             transition: all 0.3s ease;
         }
 
+        .search-container button:hover {background-color: #45a049;
+        }
+
         .search-container .btn-secondary:hover {
             background-color: #EF5350;
         }
 
-        .top-buttons {
-            margin-top: 20px;
-            text-align: center;
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            background-color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .theme-toggle i {
+            font-size: 1.5rem;
+            color: #f39c12;
+            transition: transform 0.4s ease, color 0.4s ease;
+        }
+
+        .dark-theme {
+            background-color: #1e1e1e;
+            color: #ddd;
+        }
+
+        .dark-theme .product-card {
+            background-color: #2e2e2e;
+            border-color: #444;
+        }
+
+        .dark-theme .product-name,
+        .dark-theme .product-quantity,
+        .dark-theme .product-ozon,
+        .dark-theme .category-title,
+        .dark-theme h1 {
+            color: #fff;
+        }
+
+        .dark-theme .main-menu {
+            background-color: #2e2e2e;
+        }
+
+        .dark-theme .menu-item {
+            color: #ccc;
+        }
+
+        .dark-theme .menu-item i {
+            color: #90caf9;
+        }
+
+        .dark-theme .menu-item:hover {
+            background-color: #3a3a3a;
+        }
+
+        .dark-theme .search-container input {
+            background-color: #333;
+            color: #fff;
+            border-color: #555;
+        }
+
+        .dark-theme .btn-primary {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+        }
+
+        .dark-theme .btn-danger {
+            background-color: #e53935;
+            color: white;
+            border: none;
+        }
+
+        .dark-theme .search-container .btn-secondary {
+            background-color: #e57373;
         }
 
         @media (max-width: 768px) {
@@ -167,31 +256,41 @@
         }
 
         @media (max-width: 576px) {
-            .col-md-4 {flex: 0 0 100%;
+            .col-md-4 {
+                flex: 0 0 100%;
                 max-width: 100%;
             }
         }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-sun"></i>
+    </button>
+
     <div class="container">
         <h1 class="text-center mb-3">Товары на складе</h1>
 
-        <div class="text-center top-buttons">
-            <a href="{{ url_for('add_product') }}" class="btn btn-add">
-                <i class="fas fa-plus-circle"></i> Добавить товар
+        <nav class="main-menu">
+            <a href="{{ url_for('add_product') }}" class="menu-item">
+                <i class="fas fa-plus-circle"></i>
+                <span>Добавить</span>
             </a>
-            <a href="{{ url_for('analytics') }}" class="btn btn-analytics">
-                <i class="fas fa-chart-line"></i> Аналитика
+            <a href="{{ url_for('analytics') }}" class="menu-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Аналитика</span>
             </a>
-            <a href="{{ url_for('tasks') }}" class="btn btn-add">
-                <i class="fas fa-tasks"></i> Задачи
+            <a href="{{ url_for('tasks') }}" class="menu-item">
+                <i class="fas fa-tasks"></i>
+                <span>Задачи</span>
             </a>
-            <a href="{{ url_for('logout') }}" class="btn btn-logout">
-                <i class="fas fa-sign-out-alt"></i> Выйти
+            <a href="{{ url_for('logout') }}" class="menu-item logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Выход</span>
             </a>
-        </div>
-         <div class="search-container">
+        </nav>
+
+        <div class="search-container">
             <form action="/" method="get">
                 <input type="text" name="search" id="searchInput" class="form-control" placeholder="Поиск по названию или количеству..." value="{{ request.args.get('search', '') }}">
                 <button type="submit" class="btn btn-primary">
@@ -203,16 +302,15 @@
                     </a>
                 {% endif %}
             </form>
-        </div>
-
-        {% for category, label in [('товар', 'Товары'), ('канцелярия', 'Канцелярия')] %}
+        </div>{% for category, label in [('товар', 'Товары'), ('канцелярия', 'Канцелярия')] %}
             <div class="divider"></div>
             <div class="category-title">{{ label }}</div>
             <div class="row d-flex flex-wrap">
                 {% for product in products %}
                     {% if product.category == category %}
                         <div class="col-md-4 col-sm-6 col-xs-12 d-flex">
-                            <div class="product-card w-100"><img src="{{ url_for('static', filename='uploads/' + product.image) }}" class="product-image" alt="{{ product.name }}">
+                            <div class="product-card w-100">
+                                <img src="{{ url_for('static', filename='uploads/' + product.image) }}" class="product-image" alt="{{ product.name }}">
                                 <h4 class="product-name">{{ product.name }}</h4>
                                 <p class="product-quantity">Количество: {{ product.quantity }}</p>
                                 <p class="product-ozon">Количество на Ozone: ???</p>
@@ -224,7 +322,6 @@
                                     </div>
                                     <button type="submit" class="btn btn-primary">Обновить количество</button>
                                 </form>
-
                                 <form action="{{ url_for('delete_product', product_id=product.id) }}" method="POST">
                                     <button type="submit" class="btn btn-danger">Удалить товар</button>
                                 </form>
@@ -236,8 +333,33 @@
         {% endfor %}
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        const toggleButton = document.getElementById('themeToggle');
+        const icon = toggleButton.querySelector('i');
+
+        function setTheme(isDark) {
+            if (isDark) {
+                document.body.classList.add('dark-theme');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                icon.style.color = '#f1c40f';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-theme');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                icon.style.color = '#f39c12';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        setTheme(savedTheme === 'dark');
+
+        toggleButton.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('dark-theme');
+            setTheme(isDark);
+        });
+    </script>
 </body>
 </html>

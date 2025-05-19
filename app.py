@@ -9,10 +9,9 @@ from threading import Thread
 import pandas as pd
 import telebot
 from dotenv import load_dotenv
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta, date, time as dt_time
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
-
 # === Загрузка переменных окружения ===
 load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -28,7 +27,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///databasenikita.db'  # Исп�
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = '/var/www/db1/static/uploads'  # Полный путь для загрузки
 app.config['SECRET_KEY'] = 'your-secret-key-here'  # Замените на свой секретный ключ
-
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -112,24 +110,30 @@ def delete_product(product_id):
     return redirect(url_for('index'))
 
 
-#== добавление продуктов ===
+# == добавление продуктов ===
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
 def add_product():
+    error = None
     if request.method == 'POST':
         name = request.form['name']
         quantity = int(request.form['quantity'])
         category = request.form['category']
-        image_file = request.files['image']
-        filename = None
-        if image_file:
+        image_file = request.files.get('image')
+
+        if not image_file or image_file.filename == '':
+            error = "Пожалуйста, прикрепите фото товара."
+        else:
             filename = secure_filename(image_file.filename)
-            image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        new_product = Product(name=name, quantity=quantity, category=category, image=filename)
-        db.session.add(new_product)
-        db.session.commit()
-        return redirect(url_for('index'))
-    return render_template('add_product.html')
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image_file.save(image_path)
+
+            new_product = Product(name=name, quantity=quantity, category=category, image=filename)
+            db.session.add(new_product)
+            db.session.commit()
+            return redirect(url_for('index'))
+
+    return render_template('add_product.html', error=error)
 
 
 #== авторизация===
@@ -155,7 +159,7 @@ def logout():
 
 
 #==  Таски ===
-NAMES = ['Никита', 'Рабы']
+NAMES = ['Никита', 'Сема', 'Рабы']
 
 @app.route('/tasks', methods=['GET', 'POST'])
 @login_required
@@ -184,14 +188,25 @@ def tasks():
     tasks_list = Task.query.order_by(Task.deadline).all()
     today = date.today()
 
-    now = datetime.now()
-    next_send_time = datetime.combine(now.date(), datetime.strptime("10:00", "%H:%M").time())
-    if now > next_send_time:
-        next_send_time += timedelta(days=1)
-    hours_until_send = (next_send_time - now).seconds // 3600
+    moscow_tz = timezone('Europe/Moscow')
+    now = datetime.now(moscow_tz)
+    target_time = moscow_tz.localize(datetime.combine(now.date(), dt_time(hour=9, minute=0)))
+    if now > target_time:
+        target_time += timedelta(days=1)
+    delta = target_time - now
+    hours = delta.seconds // 3600 + delta.days * 24
+    minutes = (delta.seconds % 3600) // 60
 
-    return render_template('tasks.html', tasks=tasks_list, today=today, names=NAMES, hours_until_send=hours_until_send)
+    if hours == 0 and minutes < 1:
+        time_left_str = "меньше минуты"
+    elif hours == 0:
+        time_left_str = f"{minutes} мин"
+    elif minutes == 0:
+        time_left_str = f"{hours} ч."
+    else:
+        time_left_str = f"{hours} ч. {minutes} мин"
 
+    return render_template('tasks.html', tasks=tasks_list, today=today, names=NAMES, time_left_str=time_left_str)
 
 @app.route('/tasks/delete/<int:task_id>', methods=['POST'])
 @login_required
@@ -202,14 +217,12 @@ def delete_task(task_id):
     flash('Задача удалена')
     return redirect(url_for('tasks'))
 
-
 @app.route('/notify_tasks', methods=['POST'])
 @login_required
 def notify_tasks():
     send_task_info()
     flash('Задачи отправлены в Telegram-группу!')
     return redirect(url_for('tasks'))
-
 
 def send_task_info():
     with app.app_context():
@@ -222,8 +235,10 @@ def send_task_info():
         msg = "📋 *Список задач:*\n\n"
         for task in tasks:
             days_left = (task.deadline - today).days
+            fine = 0
             if days_left < 0:
-                status = "⛔️ *ПРОСРОЧЕНО*"
+                fine = abs(days_left) * 500
+                status = f"⛔️ *ПРОСРОЧЕНО* — штраф {fine}₽"
             elif days_left == 0:
                 status = "⚠️ *Сегодня*"
             elif days_left == 1:
@@ -231,15 +246,18 @@ def send_task_info():
             else:
                 status = f"⏳ {days_left} дн."
 
-            msg += f"*{task.name}* — {task.description}\nДо {task.deadline.strftime('%Y-%m-%d')} ({status})\n\n"
+            msg += (
+                f"*{task.name}* — {task.description}\n"
+                f"🗓 До: {task.deadline.strftime('%Y-%m-%d')}\n"
+                f"{status}\n\n"
+            )
 
         bot.send_message(chat_id=GROUP_ID, text=msg, parse_mode='Markdown')
 
+# Планировщик отправки задач
+scheduler = BackgroundScheduler(timezone='Europe/Moscow')
 
-# === Планировщик отправки в 11:00 ===
-scheduler = BackgroundScheduler(timezone=timezone('Europe/Moscow'))
-
-@scheduler.scheduled_job('cron', hour=10, minute=0)
+@scheduler.scheduled_job('cron', hour=9, minute=0)
 def scheduled_task_sender():
     with app.app_context():
         send_task_info()
@@ -314,11 +332,12 @@ def handle_stock_command(message):
 def run_bot():
     bot.polling(none_stop=True)
 
-scheduler.start()
+
 if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     with app.app_context():
         db.create_all()
         create_admin_user()
+        scheduler.start()
     Thread(target=run_bot).start()
     app.run(host='0.0.0.0', port=5000)
